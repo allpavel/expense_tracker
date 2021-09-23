@@ -1,15 +1,31 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { editBudgets } from '../features/budget/budgetSlice';
+import { selectTransactions } from '../features/transactions/transactionsSlice';
 
 export const Budget = ({ budget }) => {
     const dispatch = useDispatch();
     const [amount, setAmount] = useState(budget.amount);
+    const transactions = useSelector(selectTransactions);
 
     const handleEdit = event => {
         event.preventDefault();
         dispatch(editBudgets({ category: budget.category, amount: amount}));
     };
+
+    const calculateTotal = () => {
+        return transactions[budget.category].map(transaction => transaction.amount).reduce((amount1, amount2) => amount1 + amount2, 0);
+    };
+
+    const getFundRemainingsClassName = (amount) => {
+        if (parseFloat(amount) === 0) {
+            return null;
+        }
+        return parseFloat(amount) > 0 ? 'positive' : 'negative';
+    };
+
+    const remainingFunds = Number.parseFloat(budget.amount - calculateTotal()).toFixed(2);
+    const fundRemainingsClassName = getFundRemainingsClassName(remainingFunds);
 
     return (
         <li className="budget-container">
@@ -26,7 +42,7 @@ export const Budget = ({ budget }) => {
                     <button className="update-button">Update</button>
                 </form>
             </div>
-            <h4>Funds Remaining: {budget.amount}</h4>
+            <h4 className={'remaining-funds ' + fundRemainingsClassName}>Funds Remaining: {remainingFunds}</h4>
         </li>
     );
 };
